@@ -1,0 +1,35 @@
+[project]
+name = "indigo-poc"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "alembic>=1.16.5",
+    "async-exit-stack>=1.0.1",
+    "async-generator>=1.10",
+    "asyncpg>=0.30.0",
+    "black>=25.1.0",
+    "fastapi>=0.116.1",
+    "httpx>=0.28.1",
+    "isort>=6.0.1",
+    "loguru>=0.7.3",
+    "mypy>=1.17.1",
+    "passlib[bcrypt]>=1.7.4",
+    "psycopg[binary]>=3.2.10",
+    "pydantic>=2.11.7",
+    "pytest>=8.4.2",
+    "pytest-aiohttp>=1.1.0",
+    "pytest-asyncio>=1.1.0",
+    "pytest-cov>=7.0.0",
+    "pytest-mock>=3.15.0",
+    "python-dotenv>=1.1.1",
+    "python-jose[cryptography]>=3.5.0",
+    "python-multipart>=0.0.20",
+    "ruff>=0.13.0",
+    "typer>=0.17.4",
+    "types-python-dateutil>=2.9.0.20250822",
+    "types-pytz>=2025.2.0.20250809",
+    "types-requests>=2.32.4.20250809",
+    "uvicorn[standard]>=0.35.0",
+]

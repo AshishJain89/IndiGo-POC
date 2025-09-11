@@ -1,0 +1,35 @@
+{
+  "env": {
+    "PYTHONPATH": "${workspaceFolder}/backend"
+  },
+  "configurations": [
+    {
+      "name": "Python: Debug Pytest Tests",
+      "type": "python",
+      "request": "launch",
+      "program": "${workspaceFolder}/backend/tests/test_disruptions.py",
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend"
+      },
+      "args": [
+        "-s"
+      ]
+    },
+    {
+      "name": "Python: Debug All Pytest Tests",
+      "type": "python",
+      "request": "launch",
+      "module": "pytest",
+      "args": [
+        "backend/tests"
+      ],
+      "console": "integratedTerminal",
+      "justMyCode": false,
+      "env": {
+        "PYTHONPATH": "${workspaceFolder}/backend"
+      }
+    }
+  ]
+}

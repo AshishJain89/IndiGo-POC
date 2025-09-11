@@ -1,0 +1,189 @@
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { 
+  Calendar, 
+  CalendarDays, 
+  CalendarRange,
+  RefreshCw,
+  Download,
+  Clock,
+  Users
+} from "lucide-react";
+
+type ViewMode = "day" | "week" | "month";
+
+interface CrewMember {
+  id: string;
+  name: string;
+  role: "captain" | "first-officer" | "flight-attendant";
+  status: "active" | "standby" | "rest";
+  flight?: string;
+}
+
+const RosterView = () => {
+  const [viewMode, setViewMode] = useState<ViewMode>("day");
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [rosterData, setRosterData] = useState<CrewMember[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoading(true);
+    fetch("/api/rosters/")
+      .then((res) => {
+        if (!res.ok) throw new Error("Failed to fetch roster");
+        return res.json();
+      })
+      .then((data) => {
+        setRosterData(
+          data.map((r: any) => ({
+            id: String(r.id),
+            name: r.crew_id ? `Crew #${r.crew_id}` : "Unknown",
+            role: r.crew_position?.toLowerCase().replace('_', '-') || '',
+            status: r.status?.toLowerCase() || '',
+            flight: r.flight_id ? `UA${r.flight_id}` : undefined,
+          }))
+        );
+        setError(null);
+      })
+      .catch((err) => setError(err.message))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const handleRegenerate = async () => {
+    setIsRegenerating(true);
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setIsRegenerating(false);
+  };
+
+  const getCrewColor = (role: string) => {
+    switch (role) {
+      case "captain": return "bg-crew-captain text-white";
+      case "first-officer": return "bg-crew-first-officer text-white";
+      case "flight-attendant": return "bg-crew-flight-attendant text-white";
+      default: return "bg-muted text-muted-foreground";
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case "active": return "bg-success text-success-foreground";
+      case "standby": return "bg-warning text-warning-foreground";
+      case "rest": return "bg-muted text-muted-foreground";
+      default: return "bg-muted text-muted-foreground";
+    }
+  };
+
+  return (
+    <Card className="shadow-lg">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <Calendar className="h-5 w-5" />
+            Roster Overview
+          </CardTitle>
+          
+          <div className="flex items-center gap-2">
+            <div className="flex rounded-lg border border-border p-1">
+              <Button
+                variant={viewMode === "day" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("day")}
+                className="px-3"
+              >
+                <Clock className="h-4 w-4 mr-1" />
+                Day
+              </Button>
+              <Button
+                variant={viewMode === "week" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("week")}
+                className="px-3"
+              >
+                <CalendarDays className="h-4 w-4 mr-1" />
+                Week
+              </Button>
+              <Button
+                variant={viewMode === "month" ? "default" : "ghost"}
+                size="sm"
+                onClick={() => setViewMode("month")}
+                className="px-3"
+              >
+                <CalendarRange className="h-4 w-4 mr-1" />
+                Month
+              </Button>
+            </div>
+            
+            <Button 
+              onClick={handleRegenerate}
+              disabled={isRegenerating}
+              className="gap-2"
+            >
+              <RefreshCw className={`h-4 w-4 ${isRegenerating ? 'animate-spin' : ''}`} />
+              {isRegenerating ? "Regenerating..." : "Regenerate"}
+            </Button>
+            
+            <Button variant="outline" className="gap-2">
+              <Download className="h-4 w-4" />
+              Export
+            </Button>
+          </div>
+        </div>
+      </CardHeader>
+      
+      <CardContent>
+        <div className="space-y-4">
+          <div className="grid grid-cols-7 gap-2 text-sm font-medium text-muted-foreground">
+            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => (
+              <div key={day} className="text-center p-2">{day}</div>
+            ))}
+          </div>
+          
+          <div className="space-y-3">
+            {rosterData.map((crew) => (
+              <div
+                key={crew.id}
+                className="flex items-center justify-between p-3 rounded-lg border border-border hover:shadow-md transition-shadow"
+              >
+                <div className="flex items-center gap-3">
+                  <Badge className={getCrewColor(crew.role)}>
+                    {crew.role === "captain" ? "CPT" : 
+                     crew.role === "first-officer" ? "FO" : "FA"}
+                  </Badge>
+                  <span className="font-medium">{crew.name}</span>
+                  {crew.flight && (
+                    <Badge variant="outline">Flight {crew.flight}</Badge>
+                  )}
+                </div>
+                
+                <Badge className={getStatusColor(crew.status)}>
+                  {crew.status}
+                </Badge>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex items-center gap-4 pt-4 border-t border-border text-sm text-muted-foreground">
+            <div className="flex items-center gap-2">
+              <Users className="h-4 w-4" />
+              <span>{rosterData.length} crew members scheduled</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-success"></div>
+              <span>{rosterData.filter(c => c.status === "active").length} active</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-warning"></div>
+              <span>{rosterData.filter(c => c.status === "standby").length} standby</span>
+            </div>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+  );
+};
+
+export default RosterView;

@@ -1,0 +1,37 @@
+# Backend requirements for Clean Architecture FastAPI app with PostgreSQL (psycopg)
+
+fastapi
+uvicorn[standard]
+psycopg[binary]
+pydantic
+python-dotenv
+httpx
+pytest
+pytest-asyncio
+pytest-cov
+mypy
+black
+isort
+ruff
+typer
+loguru
+alembic
+async-exit-stack
+async-generator
+
+# For typing and dev
+types-python-dateutil
+types-pytz
+types-requests
+
+# Optional: for OpenAPI docs and CORS
+python-multipart
+python-jose[cryptography]
+passlib[bcrypt]
+
+# For async database connection pooling
+asyncpg
+
+# For testing and mocking
+pytest-mock
+pytest-aiohttp
