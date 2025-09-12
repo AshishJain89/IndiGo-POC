@@ -6,6 +6,8 @@ from openai import OpenAI  # type: ignore
 import chromadb  # type: ignore
 from chromadb.config import Settings  # type: ignore
 from typing import Optional
+from backend.infrastructure.settings import settings
+import hashlib
 
 _st_model = None
 
@@ -20,7 +22,7 @@ def _get_openai_client() -> OpenAI:
 
 def get_chroma_client(persist_directory: str | None = None):
     if persist_directory is None:
-        persist_directory = os.getenv("CHROMA_DIR", "./data/chroma")
+        persist_directory = settings.chroma_dir
     os.makedirs(persist_directory, exist_ok=True)
     return chromadb.PersistentClient(path=persist_directory, settings=Settings(anonymized_telemetry=False))
 
@@ -65,7 +67,7 @@ def embed_texts(texts: List[str], model: str = "text-embedding-3-small") -> List
         global _st_model
         if _st_model is None:
             from sentence_transformers import SentenceTransformer  # type: ignore
-            _st_model = SentenceTransformer(os.getenv("SENTENCE_TRANSFORMER_MODEL", "all-MiniLM-L6-v2"))
+            _st_model = SentenceTransformer(settings.sentence_transformer_model)
         vectors = _st_model.encode(texts, show_progress_bar=False, convert_to_numpy=True, normalize_embeddings=True)
         return [v.tolist() for v in vectors]
 
@@ -86,13 +88,20 @@ def upsert_documents(
     for doc in documents:
         base_meta = metadata.copy() if metadata else {}
         base_meta.update({k: v for k, v in doc.items() if k not in ("id", "text")})
+        # Idempotency via content hash; skip chunks we already have
         doc_id = doc.get("id", "doc")
-        chunks = chunk_text(doc["text"], max_tokens=chunk_tokens, overlap_tokens=chunk_overlap)
+        content_hash = hashlib.sha256(doc["text"].encode("utf-8")).hexdigest()[:12]
+        base_meta["content_hash"] = content_hash
+        max_tokens = chunk_tokens or settings.chunk_tokens
+        overlap = chunk_overlap or settings.chunk_overlap
+        chunks = chunk_text(doc["text"], max_tokens=max_tokens, overlap_tokens=overlap)
         for idx, chunk in enumerate(chunks):
-            ids.append(f"{doc_id}-{idx}")
+            chunk_hash = hashlib.sha256(chunk.encode("utf-8")).hexdigest()[:12]
+            chunk_id = f"{doc_id}-{content_hash}-{idx}-{chunk_hash}"
+            ids.append(chunk_id)
             texts.append(chunk)
             meta = base_meta.copy()
-            meta.update({"chunk_index": str(idx)})
+            meta.update({"chunk_index": str(idx), "chunk_hash": chunk_hash})
             metadatas.append(meta)
     if texts:
         embeddings = embed_texts(texts)

@@ -6,6 +6,7 @@ import httpx
 from bs4 import BeautifulSoup  # type: ignore
 from pypdf import PdfReader  # type: ignore
 from io import BytesIO
+from backend.infrastructure.settings import settings
 
 
 DEFAULT_HEADERS = {
@@ -14,12 +15,12 @@ DEFAULT_HEADERS = {
 
 
 async def fetch_html(url: str, timeout: float = 30.0) -> str:
-    async with httpx.AsyncClient(headers=DEFAULT_HEADERS, follow_redirects=True, timeout=timeout) as client:
+    async with httpx.AsyncClient(headers=DEFAULT_HEADERS, follow_redirects=True, timeout=timeout or 30.0) as client:
         resp = await client.get(url)
         resp.raise_for_status()
         return resp.text
 async def fetch_bytes(url: str, timeout: float = 60.0) -> bytes:
-    async with httpx.AsyncClient(headers=DEFAULT_HEADERS, follow_redirects=True, timeout=timeout) as client:
+    async with httpx.AsyncClient(headers=DEFAULT_HEADERS, follow_redirects=True, timeout=timeout or 60.0) as client:
         resp = await client.get(url)
         resp.raise_for_status()
         return resp.content

@@ -4,6 +4,7 @@ fastapi
 uvicorn[standard]
 psycopg[binary]
 pydantic
+pydantic-settings
 python-dotenv
 httpx
 beautifulsoup4
