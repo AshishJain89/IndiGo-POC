@@ -8,6 +8,7 @@ wheels/
 
 # Virtual environments
 .venv
+.vscode
 
 # Local data and vector DB
 data/

@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from typing import List, Dict, Literal
 from openai import OpenAI  # type: ignore
+from backend.infrastructure.ai.perplexity_client import chat_perplexity
 
 from backend.infrastructure.ai.rag_service import get_chroma_client, embed_texts
 
@@ -31,20 +32,28 @@ def get_compliance_rules_from_vector_store(top_k: int = 8) -> List[Dict[str, obj
     docs = results.get("documents", [[]])[0]
     context = "\n\n".join(docs)
 
-    oai = _get_openai_client()
     prompt = _build_extraction_prompt(context)
-    chat = oai.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[{"role": "system", "content": "You output JSON only."}, {"role": "user", "content": prompt}],
-        temperature=0.1,
-    )
-    content = chat.choices[0].message.content or "[]"
+    # Try OpenAI first
     try:
+        oai = _get_openai_client()
+        chat = oai.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[{"role": "system", "content": "You output JSON only."}, {"role": "user", "content": prompt}],
+            temperature=0.1,
+        )
+        content = chat.choices[0].message.content or "[]"
         data = json.loads(content)
         if isinstance(data, list):
             return data
     except Exception:
-        pass
+        # Fallback to Perplexity chat if available
+        try:
+            content = asyncio.run(chat_perplexity(prompt, model="pplx-7b-online"))  # type: ignore
+            data = json.loads(content)
+            if isinstance(data, list):
+                return data
+        except Exception:
+            pass
     return []
 
 

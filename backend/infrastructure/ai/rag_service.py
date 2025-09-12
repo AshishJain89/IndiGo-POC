@@ -5,6 +5,10 @@ import tiktoken  # type: ignore
 from openai import OpenAI  # type: ignore
 import chromadb  # type: ignore
 from chromadb.config import Settings  # type: ignore
+from typing import Optional
+
+_st_model = None
+
 
 
 def _get_openai_client() -> OpenAI:
@@ -51,9 +55,19 @@ def chunk_text(text: str, max_tokens: int = 700, overlap_tokens: int = 80, model
 
 
 def embed_texts(texts: List[str], model: str = "text-embedding-3-small") -> List[List[float]]:
-    client = _get_openai_client()
-    response = client.embeddings.create(model=model, input=texts)
-    return [d.embedding for d in response.data]
+    # Try OpenAI first
+    try:
+        client = _get_openai_client()
+        response = client.embeddings.create(model=model, input=texts)
+        return [d.embedding for d in response.data]
+    except Exception:
+        # Fallback to local SentenceTransformer to avoid rate limits/quota issues
+        global _st_model
+        if _st_model is None:
+            from sentence_transformers import SentenceTransformer  # type: ignore
+            _st_model = SentenceTransformer(os.getenv("SENTENCE_TRANSFORMER_MODEL", "all-MiniLM-L6-v2"))
+        vectors = _st_model.encode(texts, show_progress_bar=False, convert_to_numpy=True, normalize_embeddings=True)
+        return [v.tolist() for v in vectors]
 
 
 def upsert_documents(

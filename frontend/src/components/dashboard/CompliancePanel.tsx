@@ -30,6 +30,8 @@ export function CompliancePanel() {
   const [rules, setRules] = useState<ComplianceRule[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isUpdating, setIsUpdating] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -45,8 +47,6 @@ export function CompliancePanel() {
 
   if (loading) return <div>Loading compliance rules...</div>;
   if (error) return <div style={{color: 'red'}}>{error}</div>;
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isUpdating, setIsUpdating] = useState(false);
 
   const fetchRules = () => {
     setLoading(true);

@@ -11,6 +11,8 @@ lxml
 openai>=1.35.0
 chromadb>=0.5.3
 tiktoken
+pypdf
+sentence-transformers>=3.0.0
 pytest
 pytest-asyncio
 pytest-cov
