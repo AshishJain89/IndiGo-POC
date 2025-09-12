@@ -48,11 +48,32 @@ export function CompliancePanel() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isUpdating, setIsUpdating] = useState(false);
 
+  const fetchRules = () => {
+    setLoading(true);
+    fetch("/api/compliance/rules")
+      .then(res => res.ok ? res.json() : Promise.reject("Failed to fetch rules"))
+      .then(data => {
+        setRules(data);
+        setError(null);
+      })
+      .catch(e => setError(e.toString()))
+      .finally(() => setLoading(false));
+  };
+
   const handleUpdateRules = async () => {
     setIsUpdating(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    setIsUpdating(false);
+    setError(null);
+    try {
+      const res = await fetch("/api/compliance/rules/update", {
+        method: "POST",
+      });
+      if (!res.ok) throw new Error("Failed to update rules");
+      fetchRules();
+    } catch (err: any) {
+      setError(err.message);
+    } finally {
+      setIsUpdating(false);
+    }
   };
 
   const getTypeColor = (type: string) => {

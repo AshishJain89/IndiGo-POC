@@ -1,5 +1,5 @@
-from applications.interfaces.crew_repository import ICrewRepository
-from domain.entities.crew import Crew
+from backend.applications.interfaces.crew_repository import ICrewRepository
+from backend.domain.entities.crew import Crew
 from datetime import datetime
 from typing import List, Optional
 

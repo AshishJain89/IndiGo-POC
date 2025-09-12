@@ -1,6 +1,6 @@
 # Repository for flights data access
 from typing import List, Dict, Any
-from infrastructure.database.core import get_db_conn
+from backend.infrastructure.database.core import get_db_conn
 
 class FlightRepository:
     def __init__(self, conn):

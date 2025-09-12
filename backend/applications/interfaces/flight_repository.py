@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from domain.entities.flight import Flight
+from backend.domain.entities.flight import Flight
 from datetime import datetime
 
 class IFlightRepository(ABC):

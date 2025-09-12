@@ -33,7 +33,7 @@ interface DisruptionForm {
   affectedFlights: string;
 }
 
-export default function DisruptionsPanel() {
+export function DisruptionsPanel() {
   const [disruptions, setDisruptions] = useState<Disruption[]>([]);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [loading, setLoading] = useState(false);

@@ -399,9 +399,9 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 
-from applications.interfaces.repository import ICrewRepository, IFlightRepository
-from domain.entities.crew import Crew
-from domain.entities.flight import Flight
+from backend.applications.interfaces.repository import ICrewRepository, IFlightRepository
+from backend.domain.entities.crew import Crew
+from backend.domain.entities.flight import Flight
 
 class CrewRepository(ICrewRepository):
     """PostgreSQL implementation of crew repository."""
@@ -470,12 +470,12 @@ class CrewRepository(ICrewRepository):
 from fastapi import APIRouter, Depends, HTTPException
 from typing import List
 
-from applications.use_cases.generate_roster import (
+from backend.applications.use_cases.generate_roster import (
     GenerateRosterUseCase, 
     GenerateRosterRequest, 
     GenerateRosterResponse
 )
-from infrastructure.security.auth import get_current_user
+from backend.infrastructure.security.auth import get_current_user
 
 router = APIRouter(prefix="/roster", tags=["roster"])
 

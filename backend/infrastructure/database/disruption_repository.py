@@ -1,6 +1,6 @@
-from applications.interfaces.disruption_repository import DisruptionRepository
-from domain.entities.disruption import Disruption
-from infrastructure.database.core import get_db_conn
+from backend.applications.interfaces.disruption_repository import DisruptionRepository
+from backend.domain.entities.disruption import Disruption
+from backend.infrastructure.database.core import get_db_conn
 from typing import List
 
 class DisruptionRepositoryImpl(DisruptionRepository):

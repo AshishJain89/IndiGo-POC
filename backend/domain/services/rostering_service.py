@@ -1,7 +1,7 @@
 # Example domain service for rostering
-from domain.entities.crew import Crew
-from domain.entities.flight import Flight
-from domain.entities.roster import Roster
+from backend.domain.entities.crew import Crew
+from backend.domain.entities.flight import Flight
+from backend.domain.entities.roster import Roster
 from typing import List
 
 class RosteringService:

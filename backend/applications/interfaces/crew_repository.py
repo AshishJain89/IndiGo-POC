@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from domain.entities.crew import Crew
+from backend.domain.entities.crew import Crew
 from datetime import datetime
 
 class ICrewRepository(ABC):

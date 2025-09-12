@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List, Optional
-from domain.entities.roster import Roster
+from backend.domain.entities.roster import Roster
 from datetime import datetime
 
 class IRosterRepository(ABC):

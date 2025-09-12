@@ -22,7 +22,7 @@ interface CrewMember {
   flight?: string;
 }
 
-const RosterView = () => {
+export function RosterView() {
   const [viewMode, setViewMode] = useState<ViewMode>("day");
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [rosterData, setRosterData] = useState<CrewMember[]>([]);

@@ -1,7 +1,7 @@
 
 from fastapi import APIRouter, Depends
-from infrastructure.database.core import get_db_conn
-from infrastructure.database.repositories import FlightRepository
+from backend.infrastructure.database.core import get_db_conn
+from backend.infrastructure.database.repositories import FlightRepository
 from typing import List
 from pydantic import BaseModel
 

@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List
-from domain.entities.disruption import Disruption
+from backend.domain.entities.disruption import Disruption
 
 class DisruptionRepository(ABC):
     @abstractmethod

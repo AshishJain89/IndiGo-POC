@@ -1,5 +1,5 @@
-from applications.interfaces.flight_repository import IFlightRepository
-from domain.entities.flight import Flight
+from backend.applications.interfaces.flight_repository import IFlightRepository
+from backend.domain.entities.flight import Flight
 from typing import List
 from datetime import datetime
 

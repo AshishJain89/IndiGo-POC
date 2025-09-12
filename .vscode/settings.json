@@ -10,5 +10,8 @@
     "python.analysis.extraPaths": [
         "${workspaceFolder}/backend"
     ],
-    "pythonPath": "${workspaceFolder}/.venv/Scripts/python.exe"
+    "pythonPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+    "cursorpyright.analysis.extraPaths": [
+        "${workspaceFolder}/backend"
+    ]
 }

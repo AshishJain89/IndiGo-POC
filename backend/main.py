@@ -6,7 +6,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-from infrastructure.logging.logging_middleware import log_requests
+from backend.infrastructure.logging.logging_middleware import log_requests
+from backend.infrastructure.api.routes import api_router
 
 app = FastAPI(title="Crew Rostering Backend", version="0.1.0")
 app.middleware("http")(log_requests)
@@ -29,5 +30,4 @@ def health_check():
     return {"status": "ok"}
 
 # Import and include API routers
-from infrastructure.api.routes import api_router
 app.include_router(api_router)
