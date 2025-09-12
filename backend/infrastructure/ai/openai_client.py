@@ -4,14 +4,12 @@ import httpx
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 OPENAI_API_URL = "https://api.openai.com/v1/chat/completions"
 
-async def chat_openai(message: str, model: str = "gpt-4") -> str:
+async def chat_openai(messages, model: str = "gpt-4") -> str:
     if not OPENAI_API_KEY:
         raise RuntimeError("OpenAI API key not set.")
     payload = {
         "model": model,
-        "messages": [
-            {"role": "user", "content": message}
-        ]
+        "messages": messages,
     }
     headers = {
         "Authorization": f"Bearer {OPENAI_API_KEY}",

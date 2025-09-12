@@ -8,7 +8,7 @@ export function DashboardView() {
   return (
     <div className="flex h-full gap-6 p-6">
       {/* Main Dashboard Content */}
-      <div className="flex-1 space-y-6">
+      <div className="flex-1 space-y-6 max-w-5xl w-full">
         {/* Top Row - Roster View */}
         <RosterView />
         
@@ -23,7 +23,7 @@ export function DashboardView() {
       </div>
       
       {/* Right Sidebar - Chat Assistant */}
-      <div className="w-96">
+      <div className="w-96 flex-shrink-0">
         <ChatAssistant />
       </div>
     </div>

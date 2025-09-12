@@ -17,40 +17,76 @@ interface ChatAssistantProps {
   onClose?: () => void;
 }
 
+const PROVIDERS = [
+  { label: "Groq", value: "groq" },
+  { label: "Perplexity", value: "perplexity" },
+  { label: "OpenAI", value: "openai" },
+  { label: "Cursor", value: "cursor" },
+];
+
+async function sendMessageToBackend(message: string, history: {role: string, content: string}[], provider: string): Promise<string> {
+  try {
+    const response = await fetch("/api/chat/", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ message, history, provider }),
+    });
+    if (!response.ok) {
+      throw new Error("Failed to get response from backend");
+    }
+    const data = await response.json();
+    return data.response || "No response from backend.";
+  } catch (error) {
+    return `Error: ${error instanceof Error ? error.message : "Unknown error"}`;
+  }
+}
+
 export function ChatAssistant({ onClose }: ChatAssistantProps) {
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
       type: "assistant",
-      content: "Hello! I'm your Crew Rostering AI Assistant. I can help you regenerate rosters, check compliance, analyze disruptions, and answer questions about crew scheduling.",
-      timestamp: new Date()
-    }
+      content:
+        "Hello! I'm your Crew Rostering AI Assistant. I can help you regenerate rosters, check compliance, analyze disruptions, and answer questions about crew scheduling.",
+      timestamp: new Date(),
+    },
   ]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [provider, setProvider] = useState("groq");
 
-  const handleSend = () => {
-    if (!input.trim()) return;
-    
+  const handleSend = async () => {
+    if (!input.trim() || loading) return;
+
     const userMessage: Message = {
       id: Date.now().toString(),
       type: "user",
       content: input,
-      timestamp: new Date()
+      timestamp: new Date(),
     };
-    
-    setMessages(prev => [...prev, userMessage]);
+
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
-    
-    // Simulate AI response
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        type: "assistant",
-        content: "I understand your request. Let me help you with that. This is a demo response - in production, I would connect to the backend APIs to process your request.",
-        timestamp: new Date()
-      };
-      setMessages(prev => [...prev, aiMessage]);
-    }, 1000);
+    setLoading(true);
+
+    // Prepare history for backend (exclude timestamps and ids)
+    const history = [...messages, userMessage].map((msg) => ({
+      role: msg.type === "user" ? "user" : "assistant",
+      content: msg.content,
+    }));
+
+    // Call backend API
+    const aiResponse = await sendMessageToBackend(userMessage.content, history.slice(0, -1), provider);
+    const aiMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      type: "assistant",
+      content: aiResponse,
+      timestamp: new Date(),
+    };
+    setMessages((prev) => [...prev, aiMessage]);
+    setLoading(false);
   };
 
   return (
@@ -69,6 +105,19 @@ export function ChatAssistant({ onClose }: ChatAssistantProps) {
             </Button>
           )}
         </CardTitle>
+        <div className="mt-2 flex gap-2 items-center">
+          <span className="text-xs text-muted-foreground">Provider:</span>
+          <select
+            className="border rounded px-2 py-1 text-xs"
+            value={provider}
+            onChange={(e) => setProvider(e.target.value)}
+            disabled={loading}
+          >
+            {PROVIDERS.map((p) => (
+              <option key={p.value} value={p.value}>{p.label}</option>
+            ))}
+          </select>
+        </div>
       </CardHeader>
       
       <CardContent className="flex-1 flex flex-col p-4">
@@ -118,8 +167,9 @@ export function ChatAssistant({ onClose }: ChatAssistantProps) {
             placeholder="Ask me about crew scheduling..."
             onKeyDown={(e) => e.key === "Enter" && handleSend()}
             className="flex-1"
+            disabled={loading}
           />
-          <Button onClick={handleSend} size="icon">
+          <Button onClick={handleSend} size="icon" disabled={loading}>
             <Send className="h-4 w-4" />
           </Button>
         </div>

@@ -134,3 +134,12 @@ All colors MUST be HSL.
     @apply bg-background text-foreground;
   }
 }
+
+/* Hide scrollbar utility */
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* Fade effect for right edge of assignment badges row */
+.fade-right {
+  background: linear-gradient(to right, transparent, hsl(var(--card)) 80%);
+}

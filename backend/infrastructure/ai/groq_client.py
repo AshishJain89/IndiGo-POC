@@ -4,14 +4,12 @@ import httpx
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 GROQ_API_URL = "https://api.groq.com/openai/v1/chat/completions"
 
-async def chat_groq(message: str, model: str = "gpt-oss:20b") -> str:
+async def chat_groq(messages, model: str = "gpt-oss:20b") -> str:
     if not GROQ_API_KEY:
         raise RuntimeError("Groq API key not set.")
     payload = {
         "model": model,
-        "messages": [
-            {"role": "user", "content": message}
-        ]
+        "messages": messages,
     }
     headers = {
         "Authorization": f"Bearer {GROQ_API_KEY}",

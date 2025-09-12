@@ -4,14 +4,12 @@ import httpx
 PERPLEXITY_API_KEY = os.getenv("PERPLEXITY_API_KEY")
 PERPLEXITY_API_URL = "https://api.perplexity.ai/chat/completions"
 
-async def chat_perplexity(message: str, model: str = "pplx-7b-online") -> str:
+async def chat_perplexity(messages, model: str = "pplx-7b-online") -> str:
     if not PERPLEXITY_API_KEY:
         raise RuntimeError("Perplexity API key not set.")
     payload = {
         "model": model,
-        "messages": [
-            {"role": "user", "content": message}
-        ]
+        "messages": messages,
     }
     headers = {
         "Authorization": f"Bearer {PERPLEXITY_API_KEY}",
