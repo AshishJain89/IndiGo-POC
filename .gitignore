@@ -12,3 +12,4 @@ wheels/
 
 # Local data and vector DB
 data/
+.env
