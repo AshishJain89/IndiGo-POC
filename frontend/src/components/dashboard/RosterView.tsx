@@ -193,11 +193,6 @@ export function RosterView() {
       
       <CardContent>
         <div className="space-y-4">
-          <div className="grid grid-cols-7 gap-2 text-sm font-medium text-muted-foreground">
-            {["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"].map(day => (
-              <div key={day} className="text-center p-2">{day}</div>
-            ))}
-          </div>
           {/* Scrollable crew list */}
           <div className="space-y-3 overflow-y-auto max-h-[60vh] pr-2">
             {crewRosters.map((crew) => {

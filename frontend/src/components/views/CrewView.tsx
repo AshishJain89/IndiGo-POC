@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Users, 
   Search, 
@@ -25,12 +26,14 @@ interface CrewMember {
   qualifications: string[];
 }
 
-
-
+const roles = ["all", "captain", "first-officer", "flight-attendant"];
+const statuses = ["all", "active", "standby", "rest", "vacation"];
 
 export function CrewView() {
   const [selectedCrew, setSelectedCrew] = useState<CrewMember | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedRole, setSelectedRole] = useState<string>("all");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
   const [crewMembers, setCrewMembers] = useState<CrewMember[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -63,9 +66,13 @@ export function CrewView() {
   }, []);
 
   const filteredCrew = crewMembers.filter(crew =>
-    crew.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    crew.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    crew.homeBase.toLowerCase().includes(searchTerm.toLowerCase())
+    (searchTerm === "" || 
+      crew.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      crew.role.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      crew.homeBase.toLowerCase().includes(searchTerm.toLowerCase())
+    ) &&
+    (selectedRole === "all" || crew.role === selectedRole) &&
+    (selectedStatus === "all" || crew.status === selectedStatus)
   );
 
   const getCrewColor = (role: string) => {
@@ -114,10 +121,47 @@ export function CrewView() {
               className="pl-10 w-64"
             />
           </div>
-          <Button variant="outline" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Filter
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Filter
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Filter Crew</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label htmlFor="role-filter" className="text-right">Role</label>
+                  <Select value={selectedRole} onValueChange={setSelectedRole}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select role" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map(role => (
+                        <SelectItem key={role} value={role}>{role === 'all' ? 'All Roles' : getRoleDisplayName(role)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label htmlFor="status-filter" className="text-right">Status</label>
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statuses.map(status => (
+                        <SelectItem key={status} value={status}>{status === 'all' ? 'All Statuses' : status.charAt(0).toUpperCase() + status.slice(1)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

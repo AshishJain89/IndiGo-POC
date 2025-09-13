@@ -3,7 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Plane, 
   Search, 
@@ -34,12 +35,18 @@ interface Flight {
   conflicts: string[];
 }
 
-
-
+const statuses = ["all", "on-time", "delayed", "cancelled", "boarding"];
+const uniqueAircraft = (flights: Flight[]) => {
+  const aircraftSet = new Set<string>();
+  flights.forEach(flight => aircraftSet.add(flight.aircraft));
+  return ["all", ...Array.from(aircraftSet)];
+};
 
 export function FlightView() {
   const [selectedFlight, setSelectedFlight] = useState<Flight | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
+  const [selectedStatus, setSelectedStatus] = useState<string>("all");
+  const [selectedAircraft, setSelectedAircraft] = useState<string>("all");
   const [flights, setFlights] = useState<Flight[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -66,11 +73,17 @@ export function FlightView() {
       .finally(() => setLoading(false));
   }, []);
 
+  const aircraftOptions = uniqueAircraft(flights);
+
   const filteredFlights = flights.filter(flight =>
-    flight.flightNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    flight.route.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    flight.route.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    flight.aircraft.toLowerCase().includes(searchTerm.toLowerCase())
+    (searchTerm === "" || 
+      flight.flightNumber.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      flight.route.from.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      flight.route.to.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      flight.aircraft.toLowerCase().includes(searchTerm.toLowerCase())
+    ) &&
+    (selectedStatus === "all" || flight.status === selectedStatus) &&
+    (selectedAircraft === "all" || flight.aircraft === selectedAircraft)
   );
 
   const getStatusColor = (status: string) => {
@@ -113,10 +126,47 @@ export function FlightView() {
               className="pl-10 w-64"
             />
           </div>
-          <Button variant="outline" className="gap-2">
-            <Filter className="h-4 w-4" />
-            Filter
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="gap-2">
+                <Filter className="h-4 w-4" />
+                Filter
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Filter Flights</DialogTitle>
+              </DialogHeader>
+              <div className="grid gap-4 py-4">
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label htmlFor="status-filter" className="text-right">Status</label>
+                  <Select value={selectedStatus} onValueChange={setSelectedStatus}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {statuses.map(status => (
+                        <SelectItem key={status} value={status}>{status === 'all' ? 'All Statuses' : status.charAt(0).toUpperCase() + status.slice(1)}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="grid grid-cols-4 items-center gap-4">
+                  <label htmlFor="aircraft-filter" className="text-right">Aircraft</label>
+                  <Select value={selectedAircraft} onValueChange={setSelectedAircraft}>
+                    <SelectTrigger className="col-span-3">
+                      <SelectValue placeholder="Select aircraft" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {aircraftOptions.map(aircraft => (
+                        <SelectItem key={aircraft} value={aircraft}>{aircraft === 'all' ? 'All Aircraft' : aircraft}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
