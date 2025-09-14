@@ -14,7 +14,12 @@ import {
   Activity,
   FileText,
   AlertTriangle,
-  CheckCircle
+  CheckCircle,
+  Bed,
+  Plane,
+  CloudRain,
+  AlertOctagon,
+  Info
 } from "lucide-react";
 
 interface MetricCard {
@@ -22,11 +27,11 @@ interface MetricCard {
   value: string;
   change: string;
   trend: "up" | "down" | "stable";
-  icon: React.ReactNode;
+  icon: string;
 };
 
 interface ViolationItem {
-  id: string;
+  id: number;
   rule: string;
   description: string;
   severity: "low" | "medium" | "high";
@@ -35,7 +40,7 @@ interface ViolationItem {
 };
 
 interface AuditLogEntry {
-  id: string;
+  id: number;
   timestamp: Date;
   user: string;
   action: string;
@@ -48,6 +53,22 @@ interface AuditLogEntry {
 
 
 export const AnalyticsView = () => {
+  const renderMetricIcon = (iconName: string) => {
+    const iconProps = { className: "h-6 w-6" };
+    switch (iconName) {
+      case "TrendingUp":
+        return <div className="flex items-center justify-center bg-blue-100 rounded-lg h-12 w-12"><TrendingUp {...iconProps} className="text-blue-500" /></div>;
+      case "Users":
+        return <div className="flex items-center justify-center bg-purple-100 rounded-lg h-12 w-12"><Users {...iconProps} className="text-purple-500" /></div>;
+      case "Shield":
+        return <div className="flex items-center justify-center bg-green-100 rounded-lg h-12 w-12"><Shield {...iconProps} className="text-green-500" /></div>;
+      case "AlertTriangle":
+        return <div className="flex items-center justify-center bg-red-100 rounded-lg h-12 w-12"><AlertTriangle {...iconProps} className="text-red-500" /></div>;
+      default:
+        return <div className="flex items-center justify-center bg-gray-100 rounded-lg h-12 w-12"><Activity {...iconProps} className="text-gray-500" /></div>;
+    }
+  };
+
   const [metrics, setMetrics] = useState<MetricCard[]>([]);
   const [violations, setViolations] = useState<ViolationItem[]>([]);
   const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
@@ -179,23 +200,19 @@ export const AnalyticsView = () => {
       </div>
 
       {/* Key Metrics Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {metrics.map((metric, index) => (
           <Card key={index}>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">{metric.title}</p>
-                  <p className="text-2xl font-bold">{metric.value}</p>
-                  <div className={`flex items-center gap-1 text-sm ${getTrendColor(metric.trend)}`}>
-                    {getTrendIcon(metric.trend)}
-                    <span>{metric.change} from last {timeFilter.slice(0, -2)}</span>
-                  </div>
-                </div>
-                <div className="text-primary">
-                  {metric.icon}
-                </div>
-              </div>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>
+              {renderMetricIcon(metric.icon)}
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{metric.value}</div>
+              <p className={`text-xs ${getTrendColor(metric.trend)} flex items-center gap-1`}>
+                {getTrendIcon(metric.trend)}
+                {metric.change} from last {timeFilter.slice(0, -2)}
+              </p>
             </CardContent>
           </Card>
         ))}
@@ -211,25 +228,27 @@ export const AnalyticsView = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-3">
+            <div className="space-y-4">
               {violations.map((violation) => (
-                <div key={violation.id} className="p-3 rounded border border-border">
-                  <div className="flex items-start justify-between mb-2">
-                    <h4 className="font-medium text-sm">{violation.rule}</h4>
-                    <Badge className={getSeverityColor(violation.severity)}>
-                      {violation.severity}
-                    </Badge>
+                <div key={violation.id} className="flex items-start gap-4">
+                  <div className="flex-shrink-0">
+                    {violation.severity === 'high' && <AlertTriangle className="h-5 w-5 text-red-500" />}
+                    {violation.severity === 'medium' && <AlertOctagon className="h-5 w-5 text-orange-500" />}
+                    {violation.severity === 'low' && <Info className="h-5 w-5 text-yellow-500" />}
                   </div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    {violation.description}
-                  </p>
-                  <div className="flex items-center justify-between">
-                    <Badge variant="outline" className="text-xs">
+                  <div className="flex-grow">
+                    <div className="flex items-center justify-between">
+                      <h4 className="font-medium text-sm">{violation.rule}</h4>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(violation.timestamp).toLocaleTimeString()}
+                      </span>
+                    </div>
+                    <p className="text-sm text-muted-foreground">
+                      {violation.description}
+                    </p>
+                    <Badge variant="outline" className="mt-2 text-xs">
                       {violation.crew}
                     </Badge>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(violation.timestamp).toLocaleTimeString()}
-                    </span>
                   </div>
                 </div>
               ))}
@@ -247,29 +266,49 @@ export const AnalyticsView = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="p-3 rounded border border-border">
-                <h4 className="font-medium mb-2">Peak Performance Hours</h4>
-                <p className="text-sm text-muted-foreground">
-                  Crew performs best during 8AM-2PM shifts with 15% higher efficiency
-                </p>
+              <div className="flex items-start gap-4 p-3 rounded border border-border">
+                <div className="flex-shrink-0 pt-1">
+                  <Clock className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Peak Performance Hours</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Crew performs best during 8AM-2PM shifts with 15% higher efficiency.
+                  </p>
+                </div>
               </div>
-              <div className="p-3 rounded border border-border">
-                <h4 className="font-medium mb-2">Optimal Rest Periods</h4>
-                <p className="text-sm text-muted-foreground">
-                  12-hour rest periods show 23% better crew satisfaction vs 8-hour minimum
-                </p>
+              <div className="flex items-start gap-4 p-3 rounded border border-border">
+                <div className="flex-shrink-0 pt-1">
+                  <Bed className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Optimal Rest Periods</h4>
+                  <p className="text-sm text-muted-foreground">
+                    12-hour rest periods show 23% better crew satisfaction vs 8-hour minimum.
+                  </p>
+                </div>
               </div>
-              <div className="p-3 rounded border border-border">
-                <h4 className="font-medium mb-2">Route Preferences</h4>
-                <p className="text-sm text-muted-foreground">
-                  Domestic routes have 18% higher crew satisfaction than international
-                </p>
+              <div className="flex items-start gap-4 p-3 rounded border border-border">
+                <div className="flex-shrink-0 pt-1">
+                  <Plane className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Route Preferences</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Domestic routes have 18% higher crew satisfaction than international.
+                  </p>
+                </div>
               </div>
-              <div className="p-3 rounded border border-border">
-                <h4 className="font-medium mb-2">Disruption Patterns</h4>
-                <p className="text-sm text-muted-foreground">
-                  Weather-related disruptions peak at 3PM-6PM on weekdays
-                </p>
+              <div className="flex items-start gap-4 p-3 rounded border border-border">
+                <div className="flex-shrink-0 pt-1">
+                  <CloudRain className="h-5 w-5 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-medium">Disruption Patterns</h4>
+                  <p className="text-sm text-muted-foreground">
+                    Weather-related disruptions peak at 3PM-6PM on weekdays.
+                  </p>
+                </div>
               </div>
             </div>
           </CardContent>

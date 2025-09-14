@@ -1,9 +1,9 @@
-from backend.applications.interfaces.disruption_repository import DisruptionRepository
+from backend.applications.interfaces.disruption_repository import IDisruptionRepository
 from backend.domain.entities.disruption import Disruption
 from backend.infrastructure.database.core import get_db_conn
 from typing import List
 
-class DisruptionRepositoryImpl(DisruptionRepository):
+class DisruptionRepositoryImpl(IDisruptionRepository):
     def __init__(self, conn):
         self.conn = conn
 
@@ -26,3 +26,10 @@ class DisruptionRepositoryImpl(DisruptionRepository):
                     timestamp=d["timestamp"].isoformat() if d["timestamp"] else ""
                 ))
             return disruptions
+
+    async def get_total_count(self) -> int:
+        query = "SELECT COUNT(*) FROM disruptions"
+        async with self.conn.cursor() as cur:
+            await cur.execute(query)
+            row = await cur.fetchone()
+            return row[0] if row else 0

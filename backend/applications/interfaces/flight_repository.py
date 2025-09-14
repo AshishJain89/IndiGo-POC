@@ -13,3 +13,7 @@ class IFlightRepository(ABC):
     @abstractmethod
     async def save(self, flight: Flight) -> Flight:
         pass
+
+    @abstractmethod
+    async def get_total_count(self) -> int:
+        pass

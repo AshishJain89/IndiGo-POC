@@ -37,3 +37,10 @@ class FlightRepository(IFlightRepository):
             await cur.execute(query, values)
             row = await cur.fetchone()
             return Flight(**dict(zip([desc[0] for desc in cur.description], row)))
+
+    async def get_total_count(self) -> int:
+        query = "SELECT COUNT(*) FROM flights"
+        async with self.conn.cursor() as cur:
+            await cur.execute(query)
+            row = await cur.fetchone()
+            return row[0] if row else 0

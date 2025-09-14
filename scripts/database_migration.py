@@ -157,6 +157,16 @@ class SchemaDefinitions:
                     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
                 );
+            """,
+            'audit_log': """
+                CREATE TABLE IF NOT EXISTS audit_log (
+                    id SERIAL PRIMARY KEY,
+                    timestamp TIMESTAMP,
+                    user_id VARCHAR(255),
+                    action VARCHAR(255),
+                    details TEXT,
+                    type VARCHAR(255)
+                );
             """
         }
 
@@ -165,7 +175,8 @@ class SchemaDefinitions:
         return [
             "DROP TABLE IF EXISTS rosters CASCADE;",
             "DROP TABLE IF EXISTS flights CASCADE;",
-            "DROP TABLE IF EXISTS crew CASCADE;"
+            "DROP TABLE IF EXISTS crew CASCADE;",
+            "DROP TABLE IF EXISTS audit_log CASCADE;"
         ]
 
 
@@ -192,8 +203,10 @@ class SampleDataGenerator:
         """
         crew_ranks = ["Captain", "First Officer", "Flight Attendant"]
         airports = ["JFK", "LHR", "DXB", "DEL", "SIN"]
+        first_names = ["James", "Mary", "John", "Patricia", "Robert", "Jennifer", "Michael", "Linda"]
+        last_names = ["Smith", "Johnson", "Williams", "Brown", "Jones", "Garcia", "Miller", "Davis"]
         params = [(
-            f"EMP{i+1:04d}", f"First{i+1}", f"Last{i+1}",
+            f"EMP{i+1:04d}", random.choice(first_names), random.choice(last_names),
             random.choice(crew_ranks), random.choice(airports),
             datetime.now().date(), "active"
         ) for i in range(count)]
@@ -207,16 +220,16 @@ class SampleDataGenerator:
             ON CONFLICT (flight_number) DO NOTHING;
         """
         start, end = self._get_date_range(year, quarter)
-        airports = ["JFK", "LHR", "DXB", "DEL", "SIN"]
+        airports = ["JFK", "LHR", "DXB", "DEL", "SIN", "BOM", "CCU", "MAA"]
         aircrafts = ["A320", "B737", "B777", "A380"]
         params = []
         for i in range(count):
             dep, arr = random.sample(airports, 2)
             dep_time = start + timedelta(days=random.randint(0, (end - start).days),
                                          hours=random.randint(0, 23),
-                                         minutes=random.randint(0, 59))
-            arr_time = dep_time + timedelta(hours=random.randint(2, 12))
-            params.append((f"AI{i+1000}", "AI", dep, arr, dep_time, arr_time, random.choice(aircrafts), "scheduled"))
+                                         minutes=random.choice([0, 15, 30, 45]))
+            arr_time = dep_time + timedelta(hours=random.randint(2, 12), minutes=random.choice([0, 15, 30, 45]))
+            params.append((f"6E{i+1000}", "6E", dep, arr, dep_time, arr_time, random.choice(aircrafts), "scheduled"))
         self.db_manager.execute_many(sql, params)
 
     def generate_rosters(self, year: int, quarter: int, count: int = 5000):
@@ -240,10 +253,31 @@ class SampleDataGenerator:
                            duty_start, duty_end, duty_start - timedelta(hours=1), duty_end + timedelta(hours=1)))
         self.db_manager.execute_many(sql, params)
 
+    def generate_audit_log(self, count: int = 200):
+        sql = """
+            INSERT INTO audit_log (timestamp, user_id, action, details, type)
+            VALUES (%s, %s, %s, %s, %s);
+        """
+        actions = ["Roster Update", "System Maintenance", "Compliance Rule Update", "Disruption Alert"]
+        users = ["admin", "system", "compliance_officer", "dispatcher"]
+        types = ["roster_change", "system", "rule_update", "disruption"]
+        params = []
+        for _ in range(count):
+            timestamp = datetime.now() - timedelta(days=random.randint(0, 90), hours=random.randint(0, 23))
+            params.append((
+                timestamp,
+                random.choice(users),
+                random.choice(actions),
+                "Details about the action.",
+                random.choice(types)
+            ))
+        self.db_manager.execute_many(sql, params)
+
     def generate_all(self, year: int, quarter: int):
         self.generate_crew()
         self.generate_flights(year, quarter)
         self.generate_rosters(year, quarter)
+        self.generate_audit_log()
 
 
 class DatabaseMigration:
@@ -254,7 +288,7 @@ class DatabaseMigration:
         self.sample_generator = SampleDataGenerator(self.db_manager)
 
     def create_tables(self) -> bool:
-        for table in ["crew", "flights", "rosters"]:
+        for table in ["crew", "flights", "rosters", "audit_log"]:
             if not self.db_manager.execute_sql(self.schema.get_table_definitions()[table]):
                 return False
         return True
@@ -272,7 +306,7 @@ class DatabaseMigration:
         return ok
 
     def print_row_counts(self):
-        tables = ["crew", "flights", "rosters"]
+        tables = ["crew", "flights", "rosters", "audit_log"]
         print("Row counts:")
         for t in tables:
             count = self.db_manager.fetch_scalar(f"SELECT COUNT(*) FROM {t};")

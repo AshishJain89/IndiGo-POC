@@ -13,3 +13,7 @@ class ICrewRepository(ABC):
     @abstractmethod
     async def save(self, crew: Crew) -> Crew:
         pass
+
+    @abstractmethod
+    async def get_total_active_count(self) -> int:
+        pass

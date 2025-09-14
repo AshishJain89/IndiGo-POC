@@ -1,29 +1,51 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from backend.infrastructure.database.core import get_db_conn
+from backend.infrastructure.database.flight_repository import FlightRepository
+from backend.infrastructure.database.crew_repository import CrewRepository
+from backend.infrastructure.database.disruption_repository import DisruptionRepositoryImpl
+from backend.infrastructure.database.audit_log_repository import AuditLogRepository
 
 router = APIRouter()
 
 @router.get("/metrics")
-def get_metrics():
-    # Placeholder for actual metrics data
+async def get_metrics(conn=Depends(get_db_conn)):
+    flight_repo = FlightRepository(conn)
+    crew_repo = CrewRepository(conn)
+    disruption_repo = DisruptionRepositoryImpl(conn)
+
+    total_flights = await flight_repo.get_total_count()
+    active_crew = await crew_repo.get_total_active_count()
+    total_disruptions = await disruption_repo.get_total_count()
+
+    compliance_rate = 0
+    if total_flights > 0:
+        compliance_rate = round((total_flights - total_disruptions) / total_flights * 100)
+
     return [
-        {"title": "Total Flights", "value": "1250", "change": "5%", "trend": "up", "icon": "TrendingUp"},
-        {"title": "Active Crew", "value": "350", "change": "2%", "trend": "up", "icon": "Users"},
-        {"title": "Compliance Rate", "value": "98%", "change": "0%", "trend": "stable", "icon": "Shield"},
-        {"title": "Disruptions", "value": "15", "change": "10%", "trend": "down", "icon": "AlertTriangle"},
+        {"title": "Total Flights", "value": str(total_flights), "change": "5%", "trend": "up", "icon": "TrendingUp"},
+        {"title": "Active Crew", "value": str(active_crew), "change": "2%", "trend": "up", "icon": "Users"},
+        {"title": "Compliance Rate", "value": f"{compliance_rate}%", "change": "0%", "trend": "stable", "icon": "Shield"},
+        {"title": "Disruptions", "value": str(total_disruptions), "change": "10%", "trend": "down", "icon": "AlertTriangle"},
     ]
 
 @router.get("/violations")
-def get_violations():
-    # Placeholder for actual violations data
+async def get_violations(conn=Depends(get_db_conn)):
+    disruption_repo = DisruptionRepositoryImpl(conn)
+    disruptions = await disruption_repo.get_disruptions()
     return [
-        {"id": "v1", "rule": "Rest Period Violation", "description": "Crew member exceeded maximum duty hours.", "severity": "high", "crew": "CRW789", "timestamp": "2023-10-27T10:00:00Z"},
-        {"id": "v2", "rule": "Mandatory Training Missed", "description": "Crew member failed to complete recurrent training.", "severity": "medium", "crew": "CRW123", "timestamp": "2023-10-26T15:30:00Z"},
+        {
+            "id": d.id,
+            "rule": d.title,
+            "description": d.description,
+            "severity": d.severity,
+            "crew": "CRW789",  # Placeholder
+            "timestamp": d.timestamp,
+        }
+        for d in disruptions
     ]
 
 @router.get("/auditlog")
-def get_audit_log():
-    # Placeholder for actual audit log data
-    return [
-        {"id": "a1", "timestamp": "2023-10-27T11:00:00Z", "user": "admin", "action": "Roster Update", "details": "Roster for flight AI101 updated.", "type": "roster_change"},
-        {"id": "a2", "timestamp": "2023-10-27T09:30:00Z", "user": "system", "action": "System Maintenance", "details": "Database backup completed.", "type": "system"},
-    ]
+async def get_audit_log(conn=Depends(get_db_conn)):
+    audit_log_repo = AuditLogRepository(conn)
+    audit_logs = await audit_log_repo.get_all()
+    return audit_logs
